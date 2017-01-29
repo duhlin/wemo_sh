@@ -1,0 +1,43 @@
+#!/bin/sh
+
+startup_path=$1
+hardware_id=$2
+device_id=$3
+status=$4
+status2=$5
+devname=$6
+
+wemo_id=""
+case $devname in
+  EclairageChambre)
+    wemo_id=94103EF6BF44BB6D
+    ;;
+  EclairageTerrasse)
+    wemo_id=94103EF6BF44BD6E
+    ;;
+  *)
+    wemo_id=""
+    ;;
+esac
+
+if [ $wemo_id != "" ]
+then
+	echo "$(date): startup_path=${startup_path}, hardware_id=${hardware_id}, device_id=${device_id}, status=${status}, status2=${status2}, devname=${devname}" >> /tmp/domoticz_main.log
+        lvl_correct=0
+	case $status2 in
+		On)
+			echo /home/pi/wemo_sh/wemo_light_toggle $wemo_id 1 > /tmp/wemo_sh.log
+			/home/pi/wemo_sh/wemo_light_toggle $wemo_id 1 >> /tmp/wemo_sh.log
+			;;
+		Off)
+			echo /home/pi/wemo_sh/wemo_light_toggle $wemo_id 0 > /tmp/wemo_sh.log
+			/home/pi/wemo_sh/wemo_light_toggle $wemo_id 0 >> /tmp/wemo_sh.log
+			;;
+		*)
+			lvl=${status2#Set Level: }
+			lvl_correct=$((${lvl%\%} * 255 / 100))
+			echo /home/pi/wemo_sh/wemo_light_dim $wemo_id $lvl_correct 1 > /tmp/wemo_sh.log
+			/home/pi/wemo_sh/wemo_light_dim $wemo_id $lvl_correct 1 >> /tmp/wemo_sh.log
+			;;
+	esac
+fi
